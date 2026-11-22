@@ -1,0 +1,6 @@
+{
+  "name": "Aura Atelier",
+  "description": "Juego interactivo y academia para aprender técnicas de maquillaje, patrones de pincel y estilismo de moda con diversas modelos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
