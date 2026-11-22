@@ -2,13 +2,12 @@
 "name": "Construir APK",
 "on": ["push", "workflow_dispatch"],
 "jobs": {"build": {"runs-on": "ubuntu-latest", "timeout-minutes": 45, "steps": [
-{"uses": "actions/checkout@v4"},
-{"name": "Descomprimir proyecto", "run": "for z in *.zip; do [ -f \"$z\" ] && unzip -o -q \"$z\" && echo \"Descomprimido: $z\"; done; ls"},
+{"name": "Descargar el proyecto desde Google Drive", "run": "ID=\"1mH_JYGwskensS-d8r50s1H2p0kYps9eL\"\ncurl -sSL -o proyecto.zip \"https://drive.usercontent.google.com/download?id=${ID}&export=download&confirm=t\"\nls -la proyecto.zip\nif ! unzip -tq proyecto.zip > /dev/null; then\n  echo \"::error::El archivo de Drive no es un zip valido. Revisa que este compartido como 'Cualquier persona con el enlace'.\"\n  head -c 400 proyecto.zip; exit 1\nfi\nmkdir proyecto && unzip -q proyecto.zip -d proyecto\nRAIZ=$(dirname \"$(find proyecto -name settings.gradle.kts -not -path '*/build/*' | head -1)\")\necho \"Raiz del proyecto: $RAIZ\"\necho \"RAIZ=$RAIZ\" >> \"$GITHUB_ENV\"\nls -la \"$RAIZ\"\n"},
 {"uses": "actions/setup-java@v5", "with": {"distribution": "temurin", "java-version": "21"}},
 {"name": "Aceptar licencias", "run": "yes | \"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager\" --licenses > /dev/null || true"},
 {"uses": "gradle/actions/setup-gradle@v4", "with": {"gradle-version": "9.3.1"}},
-{"name": "Preparar archivos", "run": "touch .env.example; if [ ! -f debug.keystore ]; then keytool -genkeypair -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname \"CN=Android Debug,O=Android,C=US\"; fi"},
-{"name": "Compilar APK", "run": "gradle :app:assembleDebug --stacktrace"},
-{"name": "Subir APK", "uses": "actions/upload-artifact@v4", "with": {"name": "aura-atelier-apk", "path": "app/build/outputs/apk/debug/*.apk"}}
+{"name": "Preparar archivos", "run": "cd \"$RAIZ\"\ntouch .env.example\nif [ ! -f debug.keystore ]; then\n  keytool -genkeypair -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname \"CN=Android Debug,O=Android,C=US\"\nfi\n"},
+{"name": "Compilar APK", "run": "gradle -p \"$RAIZ\" :app:assembleDebug --stacktrace"},
+{"name": "Subir APK", "uses": "actions/upload-artifact@v4", "with": {"name": "aura-atelier-apk", "path": "${{ env.RAIZ }}/app/build/outputs/apk/debug/*.apk"}}
 ]}}
 }
